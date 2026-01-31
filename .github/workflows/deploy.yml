@@ -1,0 +1,32 @@
+name: Deploy Blog
+on:
+  push:
+    branches:
+      - main  # Ou o nome da sua branch principal
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # Importante para temas como o Blowfish
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Build
+        run: hugo --minify
+
+      - name: Deploy to VPS
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }} # IP da sua VPS
+          REMOTE_USER: ${{ secrets.REMOTE_USER }} # Geralmente 'opc' no Oracle Linux
+          TARGET: /var/www/html/
+          SOURCE: public/
